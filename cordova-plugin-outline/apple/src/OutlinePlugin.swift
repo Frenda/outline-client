@@ -32,7 +32,6 @@ class OutlinePlugin: CDVPlugin {
   public static let kMaxBreadcrumbs: UInt = 100
 
   private var callbacks: [String: String]!
-  private var connectivity: OutlineConnectivity?
 
 #if os(macOS)
   // cordova-osx does not support URL interception. Until it does, we have version-controlled
@@ -46,7 +45,6 @@ class OutlinePlugin: CDVPlugin {
   override func pluginInitialize() {
     OutlineSentryLogger.sharedInstance.initializeLogging()
 
-    connectivity = OutlineConnectivity()
     callbacks = [String: String]()
 
     OutlineVpn.shared.onVpnStatusChange(onVpnStatusChange)
@@ -123,22 +121,15 @@ class OutlinePlugin: CDVPlugin {
     sendSuccess(OutlineVpn.shared.isActive(tunnelId), callbackId: command.callbackId)
   }
 
-  func isReachable(_ command: CDVInvokedUrlCommand) {
-    guard let tunnelId = command.argument(at: 0) as? String else {
-      return sendError("Missing tunnel ID", callbackId: command.callbackId)
-    }
-    DDLogInfo("isReachable \(tunnelId)")
-    guard connectivity != nil else {
-      return sendError("Cannot assess server reachability" , callbackId: command.callbackId)
-    }
-    guard let host = command.argument(at: 1) as? String else {
+  func isServerReachable(_ command: CDVInvokedUrlCommand) {
+    DDLogInfo("isServerReachable")
+    guard let host = command.argument(at: 0) as? String else {
       return sendError("Missing host address" , callbackId: command.callbackId)
     }
-    guard let port = command.argument(at: 2) as? UInt16 else {
+    guard let port = command.argument(at: 1) as? UInt16 else {
       return sendError("Missing host port", callbackId: command.callbackId)
     }
-    let tunnel = OutlineTunnel(id: tunnelId, config: ["host": host, "port": port])
-    OutlineVpn.shared.isReachable(tunnel) { errorCode in
+    OutlineVpn.shared.isServerReachable(host: host, port: port) { errorCode in
       self.sendSuccess(errorCode == OutlineVpn.ErrorCode.noError, callbackId: command.callbackId)
     }
   }
@@ -183,6 +174,24 @@ class OutlinePlugin: CDVPlugin {
       uuid = NSUUID().uuidString
     }
     event.message = "\(OutlinePlugin.kPlatform) report (\(uuid))"
+
+    // Remove device identifier, timezone, and memory stats. Note that we cannot use the
+    // beforeSerializeEvent callback, since contexts are only added after serialization
+    // if not present.
+    let serializedEvent = event.serialize()
+    let contexts = serializedEvent["contexts"] as? [String: [String: Any]]
+    var appContext = contexts?["app"]
+    appContext?["device_app_hash"] = ""
+    var deviceContext = contexts?["device"]
+    deviceContext?["timezone"] = ""
+    deviceContext?["memory_size"] = ""
+    deviceContext?["free_memory"] = ""
+    deviceContext?["usable_memory"] = ""
+    deviceContext?["storage_size"] = ""
+    event.context = Context()
+    // Setting the sanitized contexts will prevent them from being added on serialization.
+    event.context?.appContext = appContext
+    event.context?.deviceContext = deviceContext
 
     OutlineSentryLogger.sharedInstance.addVpnExtensionLogsToSentry()
     Client.shared?.send(event: event) { (error) in

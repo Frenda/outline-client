@@ -15,13 +15,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-import {ShadowsocksConfig} from '../www/model/shadowsocks';
+import {ShadowsocksConfig} from '../www/app/config';
 
 // Format to store a tunnel configuration.
 export interface SerializableTunnel {
   id: string;
   config: ShadowsocksConfig;
-  isUdpSupported?: boolean;
 }
 
 // Persistence layer for a single SerializableTunnel.

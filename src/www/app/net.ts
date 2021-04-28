@@ -1,4 +1,4 @@
-// Copyright 2018 The Outline Authors
+// Copyright 2021 The Outline Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Typings for:
-// https://www.npmjs.com/package/fs-extra
-
-declare module 'fs-extra' {
-  // There are a few other options, see:
-  // https://github.com/jprichardson/node-fs-extra/blob/HEAD/docs/copy-sync.md
-  export function copySync(
-      src: string, dest: string, options: {overwrite?: boolean, errorOnExist?: boolean}): void;
+// Exposes native networking capabilities to the web app.
+export interface NativeNetworking {
+  // Returns whether a server is reachable via TCP at address `${hostname}:${port}`.
+  isServerReachable(hostname: string, port: number): Promise<boolean>;
 }

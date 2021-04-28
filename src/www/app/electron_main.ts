@@ -12,22 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'web-animations-js/web-animations-next-lite.min.js';
+import '@webcomponents/webcomponentsjs/webcomponents-bundle.js';
+
 import * as sentry from '@sentry/electron';
 import {clipboard, ipcRenderer} from 'electron';
+import * as promiseIpc from 'electron-promise-ipc';
 import * as os from 'os';
 
-import {EventQueue} from '../model/events';
-import {ServerConfig} from '../model/server';
-
-import {AbstractClipboard, Clipboard, ClipboardListener} from './clipboard';
+import {AbstractClipboard} from './clipboard';
 import {ElectronOutlineTunnel} from './electron_outline_tunnel';
 import {EnvironmentVariables} from './environment';
-import {OutlineErrorReporter} from './error_reporter';
+import {getSentryBrowserIntegrations, OutlineErrorReporter} from './error_reporter';
+import {FakeNativeNetworking} from './fake_net';
 import {FakeOutlineTunnel} from './fake_tunnel';
 import {getLocalizationFunction, main} from './main';
-import {OutlineServer} from './outline_server';
-import {OutlinePlatform} from './platform';
-import {AbstractUpdater, UpdateListener, Updater} from './updater';
+import {NativeNetworking} from './net';
+import {AbstractUpdater} from './updater';
 import {UrlInterceptor} from './url_interceptor';
 
 const isWindows = os.platform() === 'win32';
@@ -73,9 +74,14 @@ class ElectronUpdater extends AbstractUpdater {
 }
 
 class ElectronErrorReporter implements OutlineErrorReporter {
-  constructor(appVersion: string, privateDsn: string) {
+  constructor(appVersion: string, privateDsn: string, appName: string) {
     if (privateDsn) {
-      sentry.init({dsn: privateDsn, release: appVersion});
+      sentry.init({
+        dsn: privateDsn,
+        release: appVersion,
+        appName,
+        integrations: getSentryBrowserIntegrations
+      });
     }
   }
 
@@ -86,17 +92,22 @@ class ElectronErrorReporter implements OutlineErrorReporter {
   }
 }
 
+class ElectronNativeNetworking implements NativeNetworking {
+  async isServerReachable(hostname: string, port: number) {
+    return promiseIpc.send('is-server-reachable', {hostname, port});
+  }
+}
+
 main({
   hasDeviceSupport: () => {
     return isOsSupported;
   },
-  getPersistentServerFactory: () => {
-    return (serverId: string, config: ServerConfig, eventQueue: EventQueue) => {
-      return new OutlineServer(
-          serverId, config,
-          isOsSupported ? new ElectronOutlineTunnel(config, serverId) :
-                          new FakeOutlineTunnel(config, serverId),
-          eventQueue);
+  getNativeNetworking: () => {
+    return isOsSupported ? new ElectronNativeNetworking() : new FakeNativeNetworking();
+  },
+  getTunnelFactory: () => {
+    return (id: string) => {
+      return isOsSupported ? new ElectronOutlineTunnel(id) : new FakeOutlineTunnel(id);
     };
   },
   getUrlInterceptor: () => {
@@ -108,7 +119,8 @@ main({
   getErrorReporter: (env: EnvironmentVariables) => {
     // Initialise error reporting in the main process.
     ipcRenderer.send('environment-info', {'appVersion': env.APP_VERSION, 'dsn': env.SENTRY_DSN});
-    return new ElectronErrorReporter(env.APP_VERSION, env.SENTRY_DSN || '');
+    return new ElectronErrorReporter(
+        env.APP_VERSION, env.SENTRY_DSN || '', new URL(document.URL).searchParams.get('appName') || 'Outline Client');
   },
   getUpdater: () => {
     return new ElectronUpdater();

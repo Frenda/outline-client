@@ -7,7 +7,9 @@ The client's user interface is implemented in [Polymer](https://www.polymer-proj
 
 ## Requirements for all builds
 
-All builds require [yarn](https://yarnpkg.com/en/docs/install), in addition to other per-platform requirements. After cloning this repo, you should run "yarn" to install all dependencies.
+All builds require [yarn](https://yarnpkg.com/en/docs/install), in addition to other per-platform requirements. After cloning this repo install all dependencies with the command.
+
+    yarn
 
 ## Building the web app
 
@@ -19,6 +21,8 @@ Outline clients share the same web app across all platforms. This code is locate
 The latter command will open a browser instance running the app. Browser platform development will use fake servers to test successful and unsuccessful connections.
 
 UI components are located in [src/www/ui_components](src/www/ui_components). The app logic is located in [src/www/app](src/www/app).
+
+*Tip: Build with `(export BUILD_ENV=development; yarn gulp build --platform=browser)` to enable source maps.*
 
 ## Building the Android app
 
