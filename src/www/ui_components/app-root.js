@@ -23,6 +23,7 @@ import '@polymer/app-layout/app-toolbar/app-toolbar.js';
 import '@polymer/app-route/app-location.js';
 import '@polymer/app-route/app-route.js';
 import '@polymer/iron-icons/iron-icons.js';
+import '@polymer/iron-icons/communication-icons.js';
 import '@polymer/iron-pages/iron-pages.js';
 import '@polymer/paper-button/paper-button.js';
 import '@polymer/paper-card/paper-card.js';
@@ -379,6 +380,7 @@ export class AppRoot extends mixinBehaviors
         value: {
           am: {id: 'am', name: 'አማርኛ', dir: 'ltr'},
           ar: {id: 'ar', name: 'العربية', dir: 'rtl'},
+          az: {id: 'az', name: 'Azərbaycanca', dir: 'ltr'},
           bg: {id: 'bg', name: 'Български', dir: 'ltr'},
           ca: {id: 'ca', name: 'Català', dir: 'ltr'},
           cs: {id: 'cs', name: 'Česky', dir: 'ltr'},
