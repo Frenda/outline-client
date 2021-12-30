@@ -1,4 +1,4 @@
-#!/bin/bash -eux
+#!/bin/bash
 #
 # Copyright 2018 The Outline Authors
 #
@@ -14,7 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-npm run do src/electron/build
+set -eu
 
-export OUTLINE_DEBUG=true
-electron .
+npm run action src/www/build_cordova
+scripts/environment_json.sh -p dev > www/environment.json
+cordova prepare browser
+
+webpack serve \
+    --mode=development \
+    --static=platforms/browser/www \
+    --config=src/www/cordova.webpack.js \
+    --open /cordova_index.html

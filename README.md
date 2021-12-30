@@ -7,9 +7,14 @@ The client's user interface is implemented in [Polymer](https://www.polymer-proj
 
 ## Requirements for all builds
 
-All builds require [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm), in addition to other per-platform requirements. After cloning this repo install all dependencies with the command.
+All builds require [Node](https://nodejs.org/) 16, in addition to other per-platform requirements. 
 
-    npm ci
+> 💡 NOTE: if you have `nvm` installed, run `nvm use` to switch to the correct node version!
+
+After cloning this repo, install all node dependencies:
+```sh
+npm install
+```
 
 ## Building the web app
 
@@ -30,6 +35,8 @@ Additional requirements for Android:
 
 * Android Studio 4+
 * Android SDK 29
+
+> 💡 NOTE: If you're running linux, you can automatically set up the development environment by running `bash ./tools/build/setup_linux_android.sh`
 
 To build for android, run:
 
@@ -98,15 +105,15 @@ Additional requirements for building on Windows:
 
 To build the Electron clients, run:
 
-    npm run do src/electron/build
+    npm run action src/electron/build
 
 To run the Electron clients, run:
 
-    npm run do src/electron/run
+    npm run action src/electron/start
 
 To package the Electron clients into an installer executable, run:
 
-    npm run do src/electron/package_[linux|windows]
+    npm run action src/electron/package_[linux|windows]
 
 
 ## Error reporting
