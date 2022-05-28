@@ -1,23 +1,14 @@
 {
-  "files": [
-    "build/electron",
-    "www",
-    "resources/tray",
-    "!node_modules/electron"
-  ],
-  "asarUnpack": [
-    "third_party",
-    "tools"
-  ],
+  "files": ["build/electron", "www", "resources/tray", "!node_modules/electron"],
+  "asarUnpack": ["third_party", "tools"],
   "artifactName": "Outline-Client.${ext}",
   "directories": {
     "output": "build/dist"
   },
   "linux": {
-    "target": [
-      "AppImage"
-    ],
+    "target": ["AppImage"],
     "files": [
+      "build/icons/png",
       "third_party/badvpn/linux",
       "third_party/outline-go-tun2socks/linux",
       "third_party/shadowsocks-libev/linux",

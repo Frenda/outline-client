@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {makeConfig, SHADOWSOCKS_URI, SIP002_URI} from 'ShadowsocksConfig';
-import * as uuidv4 from 'uuidv4';
+import uuidv4 from 'uuidv4';
 
 import * as errors from '../model/errors';
 import * as events from '../model/events';
@@ -26,16 +26,19 @@ import {Tunnel, TunnelFactory, TunnelStatus} from './tunnel';
 export class OutlineServer implements Server {
   // We restrict to AEAD ciphers because unsafe ciphers are not supported in go-tun2socks.
   // https://shadowsocks.org/en/spec/AEAD-Ciphers.html
-  private static readonly SUPPORTED_CIPHERS =
-      ['chacha20-ietf-poly1305', 'aes-128-gcm', 'aes-192-gcm', 'aes-256-gcm'];
+  private static readonly SUPPORTED_CIPHERS = ['chacha20-ietf-poly1305', 'aes-128-gcm', 'aes-192-gcm', 'aes-256-gcm'];
 
   errorMessageId?: string;
   private config: ShadowsocksConfig;
 
   constructor(
-      public readonly id: string, public readonly accessKey: string, private _name: string,
-      private tunnel: Tunnel, private net: NativeNetworking,
-      private eventQueue: events.EventQueue) {
+    public readonly id: string,
+    public readonly accessKey: string,
+    private _name: string,
+    private tunnel: Tunnel,
+    private net: NativeNetworking,
+    private eventQueue: events.EventQueue
+  ) {
     this.config = accessKeyToShadowsocksConfig(accessKey);
     this.tunnel.onStatusChange((status: TunnelStatus) => {
       let statusEvent: events.OutlineEvent;
@@ -129,11 +132,14 @@ export class OutlineServerRepository implements ServerRepository {
   public static readonly SERVERS_STORAGE_KEY_V0 = 'servers';
   public static readonly SERVERS_STORAGE_KEY = 'servers_v1';
   private serverById!: Map<string, OutlineServer>;
-  private lastForgottenServer: OutlineServer|null = null;
+  private lastForgottenServer: OutlineServer | null = null;
 
   constructor(
-      private readonly net: NativeNetworking, private readonly createTunnel: TunnelFactory,
-      private eventQueue: events.EventQueue, private storage: Storage) {
+    private readonly net: NativeNetworking,
+    private readonly createTunnel: TunnelFactory,
+    private eventQueue: events.EventQueue,
+    private storage: Storage
+  ) {
     this.loadServers();
   }
 
@@ -209,7 +215,7 @@ export class OutlineServerRepository implements ServerRepository {
     }
   }
 
-  private serverFromAccessKey(accessKey: string): OutlineServer|undefined {
+  private serverFromAccessKey(accessKey: string): OutlineServer | undefined {
     for (const server of this.serverById.values()) {
       if (accessKeysMatch(accessKey, server.accessKey)) {
         return server;
@@ -257,8 +263,7 @@ export class OutlineServerRepository implements ServerRepository {
     for (const serverId of Object.keys(configById)) {
       const config = configById[serverId];
       try {
-        this.loadServer(
-            {id: serverId, accessKey: shadowsocksConfigToAccessKey(config), name: config.name});
+        this.loadServer({id: serverId, accessKey: shadowsocksConfigToAccessKey(config), name: config.name});
       } catch (e) {
         // Don't propagate so other stored servers can be created.
         console.error(e);
@@ -295,8 +300,7 @@ export class OutlineServerRepository implements ServerRepository {
   }
 
   private createServer(id: string, accessKey: string, name: string): OutlineServer {
-    const server =
-        new OutlineServer(id, accessKey, name, this.createTunnel(id), this.net, this.eventQueue);
+    const server = new OutlineServer(id, accessKey, name, this.createTunnel(id), this.net, this.eventQueue);
     try {
       this.validateAccessKey(accessKey);
     } catch (e) {
@@ -329,13 +333,15 @@ export function accessKeyToShadowsocksConfig(accessKey: string): ShadowsocksConf
 
 // Enccodes a Shadowsocks proxy configuration into an access key string.
 export function shadowsocksConfigToAccessKey(config: ShadowsocksConfig): string {
-  return SIP002_URI.stringify(makeConfig({
-    host: config.host,
-    port: config.port,
-    method: config.method,
-    password: config.password,
-    tag: config.name,
-  }));
+  return SIP002_URI.stringify(
+    makeConfig({
+      host: config.host,
+      port: config.port,
+      method: config.method,
+      password: config.password,
+      tag: config.name,
+    })
+  );
 }
 
 // Compares access keys proxying parameters.
@@ -343,8 +349,7 @@ function accessKeysMatch(a: string, b: string): boolean {
   try {
     const l = accessKeyToShadowsocksConfig(a);
     const r = accessKeyToShadowsocksConfig(b);
-    return l.host === r.host && l.port === r.port && l.password === r.password &&
-        l.method === r.method;
+    return l.host === r.host && l.port === r.port && l.password === r.password && l.method === r.method;
   } catch (e) {
     console.debug(`failed to parse access key for comparison`);
   }

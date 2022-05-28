@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { spawn } from 'child_process';
-import { constants } from 'fs';
-import { access } from 'fs/promises';
+import {spawn} from 'child_process';
+import {constants} from 'fs';
+import {access} from 'fs/promises';
 import minimist from 'minimist';
-import { dirname, resolve } from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
-import { format } from 'util';
+import {dirname, resolve} from 'path';
+import {fileURLToPath, pathToFileURL} from 'url';
+import {format} from 'util';
 
 /**
  * Get the parent folder path of this script.
@@ -113,16 +113,9 @@ function jsign(fileToSign, options) {
   }
 
   const jSignJarPath = resolve(outlineDirname(), 'third_party', 'jsign', 'jsign-4.0.jar');
-  const jsignProc = spawn(
-      'java',
-      [
-        '-jar', jSignJarPath,
-        ...options,
-        fileToSign,
-      ],
-      {
-        stdio: 'inherit',
-      });
+  const jsignProc = spawn('java', ['-jar', jSignJarPath, ...options, fileToSign], {
+    stdio: 'inherit',
+  });
   return new Promise((resolve, reject) => {
     jsignProc.on('error', reject);
     jsignProc.on('exit', resolve);
@@ -145,9 +138,7 @@ export async function signWindowsExecutable(exeFile, algorithm, options) {
   }
 
   assert(!!exeFile, 'executable path is required');
-  assert(
-      algorithm === 'sha1' || algorithm === 'sha256',
-      'hashing algorithm must be either "sha1" or "sha256"');
+  assert(algorithm === 'sha1' || algorithm === 'sha256', 'hashing algorithm must be either "sha1" or "sha256"');
 
   exeFile = resolve(exeFile);
   await assertFileExists(exeFile, 'executable file "%s" does not exist');
@@ -155,8 +146,12 @@ export async function signWindowsExecutable(exeFile, algorithm, options) {
   const password = getOptionValue(options, 'password', 'WINDOWS_SIGNING_CERT_PASSWORD', true);
 
   const jsignArgs = [
-    '--alg', algorithm === 'sha256' ? 'SHA-256' : 'SHA-1', '--tsaurl',
-    'http://timestamp.digicert.com', '--storepass', password
+    '--alg',
+    algorithm === 'sha256' ? 'SHA-256' : 'SHA-1',
+    '--tsaurl',
+    'http://timestamp.digicert.com',
+    '--storepass',
+    password,
   ];
 
   switch (type) {

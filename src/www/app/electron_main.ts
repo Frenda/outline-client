@@ -17,7 +17,7 @@ import '@webcomponents/webcomponentsjs/webcomponents-bundle.js';
 
 import * as sentry from '@sentry/electron';
 import {clipboard, ipcRenderer} from 'electron';
-import * as promiseIpc from 'electron-promise-ipc';
+import promiseIpc from 'electron-promise-ipc';
 import * as os from 'os';
 
 import {AbstractClipboard} from './clipboard';
@@ -80,14 +80,13 @@ class ElectronErrorReporter implements OutlineErrorReporter {
         dsn: privateDsn,
         release: appVersion,
         appName,
-        integrations: getSentryBrowserIntegrations
+        integrations: getSentryBrowserIntegrations,
       });
     }
   }
 
   report(userFeedback: string, feedbackCategory: string, userEmail?: string): Promise<void> {
-    sentry.captureEvent(
-        {message: userFeedback, user: {email: userEmail}, tags: {category: feedbackCategory}});
+    sentry.captureEvent({message: userFeedback, user: {email: userEmail}, tags: {category: feedbackCategory}});
     return Promise.resolve();
   }
 }
@@ -99,9 +98,7 @@ class ElectronNativeNetworking implements NativeNetworking {
 }
 
 main({
-  hasDeviceSupport: () => {
-    return isOsSupported;
-  },
+  hasDeviceSupport: () => isOsSupported,
   getNativeNetworking: () => {
     return isOsSupported ? new ElectronNativeNetworking() : new FakeNativeNetworking();
   },
@@ -110,22 +107,17 @@ main({
       return isOsSupported ? new ElectronOutlineTunnel(id) : new FakeOutlineTunnel(id);
     };
   },
-  getUrlInterceptor: () => {
-    return interceptor;
-  },
-  getClipboard: () => {
-    return new ElectronClipboard();
-  },
+  getUrlInterceptor: () => interceptor,
+  getClipboard: () => new ElectronClipboard(),
   getErrorReporter: (env: EnvironmentVariables) => {
     // Initialise error reporting in the main process.
-    ipcRenderer.send('environment-info', {'appVersion': env.APP_VERSION, 'dsn': env.SENTRY_DSN});
+    ipcRenderer.send('environment-info', {appVersion: env.APP_VERSION, dsn: env.SENTRY_DSN});
     return new ElectronErrorReporter(
-        env.APP_VERSION, env.SENTRY_DSN || '', new URL(document.URL).searchParams.get('appName') || 'Outline Client');
+      env.APP_VERSION,
+      env.SENTRY_DSN || '',
+      new URL(document.URL).searchParams.get('appName') || 'Outline Client'
+    );
   },
-  getUpdater: () => {
-    return new ElectronUpdater();
-  },
-  quitApplication: () => {
-    ipcRenderer.send('quit-app');
-  }
+  getUpdater: () => new ElectronUpdater(),
+  quitApplication: () => ipcRenderer.send('quit-app'),
 });

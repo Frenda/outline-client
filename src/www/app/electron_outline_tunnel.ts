@@ -13,7 +13,7 @@
 // limitations under the License.
 
 import {ipcRenderer} from 'electron';
-import * as promiseIpc from 'electron-promise-ipc';
+import promiseIpc from 'electron-promise-ipc';
 
 import * as errors from '../model/errors';
 
@@ -21,18 +21,18 @@ import {ShadowsocksConfig} from './config';
 import {Tunnel, TunnelStatus} from './tunnel';
 
 export class ElectronOutlineTunnel implements Tunnel {
-  private statusChangeListener: ((status: TunnelStatus) => void)|null = null;
+  private statusChangeListener: ((status: TunnelStatus) => void) | null = null;
 
   private running = false;
 
   constructor(public readonly id: string) {
     // This event is received when the proxy connects. It is mainly used for signaling the UI that
     // the proxy has been automatically connected at startup (if the user was connected at shutdown)
-    ipcRenderer.on(`proxy-connected-${this.id}`, (e: Event) => {
+    ipcRenderer.on(`proxy-connected-${this.id}`, () => {
       this.handleStatusChange(TunnelStatus.CONNECTED);
     });
 
-    ipcRenderer.on(`proxy-reconnecting-${this.id}`, (e: Event) => {
+    ipcRenderer.on(`proxy-reconnecting-${this.id}`, () => {
       this.handleStatusChange(TunnelStatus.RECONNECTING);
     });
   }
@@ -42,7 +42,7 @@ export class ElectronOutlineTunnel implements Tunnel {
       return Promise.resolve();
     }
 
-    ipcRenderer.once(`proxy-disconnected-${this.id}`, (e: Event) => {
+    ipcRenderer.once(`proxy-disconnected-${this.id}`, () => {
       this.handleStatusChange(TunnelStatus.DISCONNECTED);
     });
 
