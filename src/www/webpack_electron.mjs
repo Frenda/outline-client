@@ -14,23 +14,23 @@
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import webpack from 'webpack';
-import {baseConfig, browserConfig, __dirname, GENERATE_CSS_RTL_LOADER} from './webpack_base.mjs';
+import {baseConfig, browserConfig, __dirname, TS_LOADER, GENERATE_CSS_RTL_LOADER} from './webpack_base.mjs';
 import {merge} from 'webpack-merge';
 
 export default merge(baseConfig, browserConfig, {
-  entry: [path.resolve(__dirname, './app/electron_main.ts')],
+  entry: [path.resolve(__dirname, 'app', 'electron_main.ts')],
   target: 'electron-renderer',
   module: {
     rules: [
       {
         test: /\.m?ts$/,
         exclude: /node_modules/,
-        use: ['ts-loader', GENERATE_CSS_RTL_LOADER],
+        use: [TS_LOADER, GENERATE_CSS_RTL_LOADER],
       },
       {
         test: /\.m?ts$/,
         include: /node_modules/,
-        use: ['ts-loader'],
+        use: [TS_LOADER],
       },
       {
         test: /\.m?js$/,
@@ -46,7 +46,7 @@ export default merge(baseConfig, browserConfig, {
     }),
     new HtmlWebpackPlugin({
       filename: 'index_electron.html',
-      template: path.resolve(__dirname, './index_electron.html'),
+      template: path.resolve(__dirname, 'index_electron.html'),
     }),
   ],
 });

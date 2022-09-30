@@ -14,10 +14,7 @@
 import {html, css, LitElement} from 'lit';
 import {customElement, property, state} from 'lit/decorators.js';
 
-// TODO(daniellacosse): file import type definitions
 // TODO(daniellacosse): fix webpack copy such that we can co-locate this image asset with this folder
-// eslint-disable-next-line
-// @ts-ignore
 import circle from '../../../assets/circle.png';
 
 export enum ServerConnectionState {
@@ -42,6 +39,8 @@ export class ServerConnectionIndicator extends LitElement {
   static styles = [
     css`
       :host {
+        height: 100%;
+        outline: 0;
         position: relative;
         display: inline-block;
         aspect-ratio: 1;
@@ -65,13 +64,16 @@ export class ServerConnectionIndicator extends LitElement {
         --circle-disconnected-color: grayscale(1);
       }
 
-      :host,
-      .circle {
-        height: 100%;
-      }
-
       .circle {
         display: inline-block;
+
+        /* 
+          setting translate3d can have weird behavior on certain platforms, so 
+          hiding the element backface becomes necessary - 
+          https://developer.mozilla.org/en-US/docs/Web/CSS/backface-visibility 
+        */
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
 
         transition-property: transform, filter, opacity;
         transition-duration: var(--duration);
@@ -80,6 +82,9 @@ export class ServerConnectionIndicator extends LitElement {
         animation-duration: var(--duration);
         animation-timing-function: var(--timing-function);
         animation-iteration-count: infinite;
+        -webkit-animation-duration: var(--duration);
+        -webkit-animation-timing-function: var(--timing-function);
+        -webkit-animation-iteration-count: infinite;
       }
 
       /* 
@@ -99,12 +104,14 @@ export class ServerConnectionIndicator extends LitElement {
       .circle-disconnecting {
         opacity: var(--circle-connected-opacity);
         filter: var(--circle-connected-color);
+        -webkit-filter: var(--circle-connected-color);
       }
 
       .circle-disconnected,
       .circle-connecting {
         opacity: var(--circle-disconnected-opacity);
         filter: var(--circle-disconnected-color);
+        -webkit-filter: var(--circle-disconnected-color);
       }
 
       .circle-disconnecting {
@@ -116,7 +123,7 @@ export class ServerConnectionIndicator extends LitElement {
       /* prettier-ignore */
       circleSize => css`
         .circle-${circleSize} {
-          transform: var(--circle-${circleSize}-scale);
+          transform: translate3d(0, 0, 0) var(--circle-${circleSize}-scale);
           animation-delay: var(--circle-${circleSize}-delay);
         }
 
@@ -130,11 +137,11 @@ export class ServerConnectionIndicator extends LitElement {
         /* rtl:begin:ignore */
         @keyframes circle-${circleSize}-rotate-with-pause {
           0% {
-            transform: rotate(0deg) var(--circle-${circleSize}-scale);
+            transform: translate3d(0, 0, 0) rotate(0deg) var(--circle-${circleSize}-scale);
           }
           60%,
           100% {
-            transform: rotate(360deg) var(--circle-${circleSize}-scale);
+            transform: translate3d(0, 0, 0) rotate(360deg) var(--circle-${circleSize}-scale);
           }
         }
         /* rtl:end:ignore */
@@ -177,7 +184,12 @@ export class ServerConnectionIndicator extends LitElement {
       ${CIRCLE_SIZES.map(
         circleSize =>
           html`
-            <img class="circle circle-${circleSize} circle-${this.animationState}" src="${circle}" />
+            <img
+              class="circle circle-${circleSize} circle-${this.animationState}"
+              src="${circle}"
+              height="100%"
+              draggable="false"
+            />
           `
       )}
     `;
