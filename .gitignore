@@ -8,7 +8,6 @@ info.txt
 /plugins
 /www
 /third_party/Potatso/Pods
-/third_party/**/Carthage/Checkouts/
 xcuserdata/
 .vs/
 obj/
@@ -19,3 +18,8 @@ tools/OutlineService/OutlineService/bin/*
 *.sw?
 tools/smartdnsblock/bin/*
 !tools/smartdnsblock/bin/*.exe
+keystore.p12
+Outline.apk
+Outline.apks
+universal.apk
+toc.pb

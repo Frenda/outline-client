@@ -25,8 +25,12 @@ import path from 'path';
 const ELECTRON_BUILD_DIR = 'build';
 
 export async function main(...parameters) {
-  const {platform, buildMode, stagingPercentage} = getElectronBuildParameters(parameters);
+  const {platform, buildMode, stagingPercentage, publish} = getElectronBuildParameters(parameters);
   const version = await getVersion(platform);
+
+  if (buildMode === 'debug') {
+    console.warn(`WARNING: building "${platform}" in [DEBUG] mode. Do not publish this build!!`);
+  }
 
   await runAction('www/build', platform, `--buildMode=${buildMode}`);
   await runAction('electron/build_main', ...parameters);
@@ -42,10 +46,11 @@ export async function main(...parameters) {
 
   // build electron binary
   await electron.build({
-    publish: 'never',
+    publish: buildMode === 'release' ? 'always' : 'never',
     targets: Platform[platform.toLocaleUpperCase()].createTarget(),
     config: {
       ...electronConfig,
+      publish,
       generateUpdatesFilesForAllChannels: buildMode === 'release',
       extraMetadata: {
         ...electronConfig.extraMetadata,

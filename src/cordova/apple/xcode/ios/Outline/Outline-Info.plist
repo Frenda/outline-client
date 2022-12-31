@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleShortVersionString</key>
-	<string>1.7.3</string>
+	<string>1.9.0</string>
 	<key>CFBundleVersion</key>
-	<string>33</string>
-  <key>CFBundleDevelopmentRegion</key>
-  <string>English</string>
+	<string>35</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
 	<key>CFBundleDisplayName</key>
 	<string>Outline</string>
 	<key>CFBundleExecutable</key>
@@ -32,11 +32,14 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>ss</string>
+				<string>ssconf</string>
 			</array>
 		</dict>
 	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
