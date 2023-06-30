@@ -91,11 +91,12 @@ export async function runAction(actionPath, ...parameters) {
   const startTime = performance.now();
 
   try {
-    await spawnStream(runner, [...subCommands, resolvedPath, ...parameters]);
+    await spawnStream(runner, ...subCommands, resolvedPath, ...parameters);
   } catch (error) {
     if (error?.message) {
-      console.error(chalk.red(error.message));
+      console.error(chalk.gray(error.message));
     }
+
     console.groupEnd();
     console.error(chalk.red.bold(`▶ action(${actionPath}):`), chalk.red(`❌ Failed.`));
 
@@ -111,7 +112,9 @@ export async function runAction(actionPath, ...parameters) {
 
 async function main() {
   process.env.ROOT_DIR ??= getRootDir();
-  process.env.BUILD_DIR ??= path.join(process.env.ROOT_DIR, 'build');
+  process.env.OUTPUT_DIR ??= path.join(process.env.ROOT_DIR, 'output');
+  process.env.BUILD_DIR ??= path.join(process.env.OUTPUT_DIR, 'build');
+  process.env.COVERAGE_DIR ??= path.join(process.env.OUTPUT_DIR, 'coverage');
   process.env.FORCE_COLOR = true;
 
   if (!process.env.IS_ACTION) {
@@ -126,7 +129,7 @@ async function main() {
     console.info(
       chalk.gray(`
   =========================================================
-               © The Outline Authors, 2022
+               © The Outline Authors, 2023
   =========================================================
   `)
     );

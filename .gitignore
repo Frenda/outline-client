@@ -1,6 +1,7 @@
 .idea
 .vscode
 *.DS_Store
+/output
 /build
 info.txt
 /node_modules
@@ -23,3 +24,5 @@ Outline.apk
 Outline.apks
 universal.apk
 toc.pb
+coverage
+*.env

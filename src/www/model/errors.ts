@@ -40,14 +40,20 @@ export class ServerUrlInvalid extends CustomError {
 }
 
 export class SessionConfigFetchFailed extends CustomError {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, options?: {cause?: Error}) {
+    super(message, options);
   }
 }
 
 export class ServerAccessKeyInvalid extends CustomError {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, options?: {cause?: Error}) {
+    super(message, options);
+  }
+}
+
+export class ProxyConnectionFailure extends CustomError {
+  constructor(message: string, options?: {cause?: Error}) {
+    super(message, options);
   }
 }
 
@@ -101,7 +107,7 @@ export class VpnStartFailure extends RedFlagNativeError {}
 
 // This must be kept in sync with:
 //  - cordova-plugin-outline/apple/src/OutlineVpn.swift#ErrorCode
-//  - cordova-plugin-outline/apple/vpn/PacketTunnelProvider.h#NS_ENUM
+//  - cordova/apple/OutlineAppleLib/Sources/OutlineTunnelSources/PacketTunnelProvider.h#NS_ENUM
 //  - cordova-plugin-outline/android/java/org/outline/OutlinePlugin.java#ErrorCode
 //
 // TODO: Is it safe to re-use values here, i.e. is native node rebuilt in step with the TypeScript?

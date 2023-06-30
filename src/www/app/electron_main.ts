@@ -17,13 +17,12 @@
 import 'web-animations-js/web-animations-next-lite.min.js';
 import '@webcomponents/webcomponentsjs/webcomponents-bundle.js';
 
-import * as sentry from '@sentry/electron/renderer';
+import * as Sentry from '@sentry/electron/renderer';
 
 import {ErrorCode, OutlinePluginError} from '../model/errors';
 
 import {AbstractClipboard} from './clipboard';
 import {ElectronOutlineTunnel} from './electron_outline_tunnel';
-import {EnvironmentVariables} from './environment';
 import {getSentryBrowserIntegrations, OutlineErrorReporter} from './error_reporter';
 import {FakeNativeNetworking} from './fake_net';
 import {FakeOutlineTunnel} from './fake_tunnel';
@@ -90,18 +89,15 @@ class ElectronVpnInstaller implements VpnInstaller {
 }
 
 class ElectronErrorReporter implements OutlineErrorReporter {
-  constructor(appVersion: string, privateDsn: string) {
-    if (privateDsn) {
-      sentry.init({
-        dsn: privateDsn,
-        release: appVersion,
-        integrations: getSentryBrowserIntegrations,
-      });
-    }
+  constructor() {
+    // parameters are initialized in main process
+    Sentry.init({
+      integrations: getSentryBrowserIntegrations,
+    });
   }
 
   report(userFeedback: string, feedbackCategory: string, userEmail?: string): Promise<void> {
-    sentry.captureEvent({message: userFeedback, user: {email: userEmail}, tags: {category: feedbackCategory}});
+    Sentry.captureEvent({message: userFeedback, user: {email: userEmail}, tags: {category: feedbackCategory}});
     return Promise.resolve();
   }
 }
@@ -124,7 +120,7 @@ main({
   },
   getUrlInterceptor: () => interceptor,
   getClipboard: () => new ElectronClipboard(),
-  getErrorReporter: (env: EnvironmentVariables) => new ElectronErrorReporter(env.APP_VERSION, env.SENTRY_DSN || ''),
+  getErrorReporter: _ => new ElectronErrorReporter(),
   getUpdater: () => new ElectronUpdater(),
   getVpnServiceInstaller: () => new ElectronVpnInstaller(),
   quitApplication: () => window.electron.methodChannel.send('quit-app'),

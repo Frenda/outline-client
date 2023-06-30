@@ -28,11 +28,16 @@ import {Updater} from './updater';
 import {UrlInterceptor} from './url_interceptor';
 import {VpnInstaller} from './vpn_installer';
 
-// If s is a URL whose fragment contains a Shadowsocks URL then return that Shadowsocks URL,
-// otherwise return s.
-export function unwrapInvite(s: string): string {
+enum OUTLINE_ACCESS_KEY_SCHEME {
+  STATIC = 'ss',
+  DYNAMIC = 'ssconf',
+}
+
+// If "possiblyInviteUul" is a URL whose fragment contains a Shadowsocks URL
+// then return that Shadowsocks URL, otherwise return the original string.
+export function unwrapInvite(possiblyInviteUrl: string): string {
   try {
-    const url = new URL(s);
+    const url = new URL(possiblyInviteUrl);
     if (url.hash) {
       const decodedFragment = decodeURIComponent(url.hash);
 
@@ -41,17 +46,33 @@ export function unwrapInvite(s: string): string {
       //  - When a user opens invite.html#ENCODEDSSURL in their browser, the website (currently)
       //    redirects to invite.html#/en/invite/ENCODEDSSURL. Since copying that redirected URL
       //    seems like a reasonable thing to do, let's support those URLs too.
-      const possibleShadowsocksUrl = decodedFragment.substring(decodedFragment.indexOf('ss://'));
+      //  - Dynamic keys are not supported by the invite flow, so we don't need to check for them
+      const possibleShadowsocksUrl = decodedFragment.substring(
+        decodedFragment.indexOf(`${OUTLINE_ACCESS_KEY_SCHEME.STATIC}://`)
+      );
 
-      if (new URL(possibleShadowsocksUrl).protocol === 'ss:') {
+      if (new URL(possibleShadowsocksUrl).protocol === `${OUTLINE_ACCESS_KEY_SCHEME.STATIC}:`) {
         return possibleShadowsocksUrl;
       }
     }
   } catch (e) {
-    // Something wasn't a URL, or it couldn't be decoded - no problem, people put all kinds of
-    // unexpected things in the clipboard.
+    // It wasn't an invite URL!
   }
-  return s;
+
+  return possiblyInviteUrl;
+}
+
+// Returns true if the given url was a valid Outline invitation or
+// access key
+export function isOutlineAccessKey(url: string): boolean {
+  if (!url) return false;
+
+  // URL does not parse the hostname if the protocol is non-standard (e.g. non-http)
+  // so we're using `startsWith`
+  return (
+    url.startsWith(`${OUTLINE_ACCESS_KEY_SCHEME.STATIC}://`) ||
+    url.startsWith(`${OUTLINE_ACCESS_KEY_SCHEME.DYNAMIC}://`)
+  );
 }
 
 const DEFAULT_SERVER_CONNECTION_STATUS_CHANGE_TIMEOUT = 600;
@@ -83,6 +104,7 @@ export class App {
     this.syncServersToUI();
     this.syncConnectivityStateToServerCards();
     rootEl.appVersion = environmentVars.APP_VERSION;
+    rootEl.appBuild = environmentVars.APP_BUILD_NUMBER;
 
     if (urlInterceptor) {
       this.registerUrlInterceptionListener(urlInterceptor);
@@ -131,70 +153,85 @@ export class App {
     this.pullClipboardText();
   }
 
-  showLocalizedError(e?: Error, toastDuration = 10000) {
-    let messageKey: string;
-    let messageParams: string[] | undefined;
-    let buttonKey: string;
+  showLocalizedError(error?: Error, toastDuration = 10000) {
+    let toastMessage: string;
+    let buttonMessage: string;
     let buttonHandler: () => void;
     let buttonLink: string;
 
-    if (e instanceof errors.VpnPermissionNotGranted) {
-      messageKey = 'outline-plugin-error-vpn-permission-not-granted';
-    } else if (e instanceof errors.InvalidServerCredentials) {
-      messageKey = 'outline-plugin-error-invalid-server-credentials';
-    } else if (e instanceof errors.RemoteUdpForwardingDisabled) {
-      messageKey = 'outline-plugin-error-udp-forwarding-not-enabled';
-    } else if (e instanceof errors.ServerUnreachable) {
-      messageKey = 'outline-plugin-error-server-unreachable';
-    } else if (e instanceof errors.FeedbackSubmissionError) {
-      messageKey = 'error-feedback-submission';
-    } else if (e instanceof errors.ServerUrlInvalid) {
-      messageKey = 'error-invalid-access-key';
-    } else if (e instanceof errors.ServerIncompatible) {
-      messageKey = 'error-server-incompatible';
-    } else if (e instanceof OperationTimedOut) {
-      messageKey = 'error-timeout';
-    } else if (e instanceof errors.ShadowsocksStartFailure && this.isWindows()) {
+    if (error instanceof errors.VpnPermissionNotGranted) {
+      toastMessage = this.localize('outline-plugin-error-vpn-permission-not-granted');
+    } else if (error instanceof errors.InvalidServerCredentials) {
+      toastMessage = this.localize('outline-plugin-error-invalid-server-credentials');
+    } else if (error instanceof errors.RemoteUdpForwardingDisabled) {
+      toastMessage = this.localize('outline-plugin-error-udp-forwarding-not-enabled');
+    } else if (error instanceof errors.ServerUnreachable) {
+      toastMessage = this.localize('outline-plugin-error-server-unreachable');
+    } else if (error instanceof errors.FeedbackSubmissionError) {
+      toastMessage = this.localize('error-feedback-submission');
+    } else if (error instanceof errors.ServerUrlInvalid) {
+      toastMessage = this.localize('error-invalid-access-key');
+    } else if (error instanceof errors.ServerIncompatible) {
+      toastMessage = this.localize('error-server-incompatible');
+    } else if (error instanceof OperationTimedOut) {
+      toastMessage = this.localize('error-timeout');
+    } else if (error instanceof errors.ShadowsocksStartFailure && this.isWindows()) {
       // Fall through to `error-unexpected` for other platforms.
-      messageKey = 'outline-plugin-error-antivirus';
-      buttonKey = 'fix-this';
+      toastMessage = this.localize('outline-plugin-error-antivirus');
+      buttonMessage = this.localize('fix-this');
       buttonLink = 'https://s3.amazonaws.com/outline-vpn/index.html#/en/support/antivirusBlock';
-    } else if (e instanceof errors.ConfigureSystemProxyFailure) {
-      messageKey = 'outline-plugin-error-routing-tables';
-      buttonKey = 'feedback-page-title';
+    } else if (error instanceof errors.ConfigureSystemProxyFailure) {
+      toastMessage = this.localize('outline-plugin-error-routing-tables');
+      buttonMessage = this.localize('feedback-page-title');
       buttonHandler = () => {
         // TODO: Drop-down has no selected item, why not?
         this.rootEl.changePage('feedback');
       };
-    } else if (e instanceof errors.NoAdminPermissions) {
-      messageKey = 'outline-plugin-error-admin-permissions';
-    } else if (e instanceof errors.UnsupportedRoutingTable) {
-      messageKey = 'outline-plugin-error-unsupported-routing-table';
-    } else if (e instanceof errors.ServerAlreadyAdded) {
-      messageKey = 'error-server-already-added';
-      messageParams = ['serverName', this.getServerDisplayName(e.server)];
-    } else if (e instanceof errors.SystemConfigurationException) {
-      messageKey = 'outline-plugin-error-system-configuration';
-    } else if (e instanceof errors.ShadowsocksUnsupportedCipher) {
-      messageKey = 'error-shadowsocks-unsupported-cipher';
-      messageParams = ['cipher', e.cipher];
+    } else if (error instanceof errors.NoAdminPermissions) {
+      toastMessage = this.localize('outline-plugin-error-admin-permissions');
+    } else if (error instanceof errors.UnsupportedRoutingTable) {
+      toastMessage = this.localize('outline-plugin-error-unsupported-routing-table');
+    } else if (error instanceof errors.ServerAlreadyAdded) {
+      toastMessage = this.localize('error-server-already-added', 'serverName', this.getServerDisplayName(error.server));
+    } else if (error instanceof errors.SystemConfigurationException) {
+      toastMessage = this.localize('outline-plugin-error-system-configuration');
+    } else if (error instanceof errors.ShadowsocksUnsupportedCipher) {
+      toastMessage = this.localize('error-shadowsocks-unsupported-cipher', 'cipher', error.cipher);
+    } else if (error instanceof errors.ServerAccessKeyInvalid) {
+      toastMessage = this.localize('error-connection-configuration');
+      buttonMessage = this.localize('error-details');
+      buttonHandler = () => {
+        this.showErrorDetailDialog(error);
+      };
+    } else if (error instanceof errors.SessionConfigFetchFailed) {
+      toastMessage = this.localize('error-connection-configuration-fetch');
+      buttonMessage = this.localize('error-details');
+      buttonHandler = () => {
+        this.showErrorDetailDialog(error);
+      };
+    } else if (error instanceof errors.ProxyConnectionFailure) {
+      toastMessage = this.localize('error-connection-proxy');
+      buttonMessage = this.localize('error-details');
+      buttonHandler = () => {
+        this.showErrorDetailDialog(error);
+      };
     } else {
-      messageKey = 'error-unexpected';
-    }
+      const hasErrorDetails = Boolean(error.message || error.cause);
+      toastMessage = this.localize('error-unexpected');
 
-    const message = messageParams ? this.localize(messageKey, ...messageParams) : this.localize(messageKey);
+      if (hasErrorDetails) {
+        buttonMessage = this.localize('error-details');
+        buttonHandler = () => {
+          this.showErrorDetailDialog(error);
+        };
+      }
+    }
 
     // Defer by 500ms so that this toast is shown after any toasts that get shown when any
     // currently-in-flight domain events land (e.g. fake servers added).
     if (this.rootEl && this.rootEl.async) {
-      this.rootEl.async(() => {
-        this.rootEl.showToast(
-          message,
-          toastDuration,
-          buttonKey ? this.localize(buttonKey) : undefined,
-          buttonHandler,
-          buttonLink
-        );
+      this.rootEl?.async(() => {
+        this.rootEl.showToast(toastMessage ?? error.message, toastDuration, buttonMessage, buttonHandler, buttonLink);
       }, 500);
     }
   }
@@ -530,8 +567,20 @@ export class App {
   //#region UI dialogs
 
   private showConfirmationDialog(message: string): Promise<boolean> {
-    // Temporarily use window.alert and window.confirm here
+    // Temporarily use window.confirm here
     return new Promise<boolean>(resolve => resolve(confirm(message)));
+  }
+
+  private showErrorDetailDialog(error: Error) {
+    let message = error.toString();
+
+    if (error.cause) {
+      message += '\nCause: ';
+      message += error.cause.toString();
+    }
+
+    // Temporarily use window.alert here
+    return alert(message);
   }
 
   //#endregion UI dialogs
@@ -591,12 +640,13 @@ export class App {
 
   private registerUrlInterceptionListener(urlInterceptor: UrlInterceptor) {
     urlInterceptor.registerListener(url => {
-      if (!url || !unwrapInvite(url).startsWith('ss://')) {
+      if (!isOutlineAccessKey(unwrapInvite(url))) {
         // This check is necessary to ignore empty and malformed install-referrer URLs in Android
-        // while allowing ss:// and invite URLs.
+        // while allowing ss://, ssconf:// and invite URLs.
         // TODO: Stop receiving install referrer intents so we can remove this.
-        return console.debug(`Ignoring intercepted non-shadowsocks url`);
+        return console.debug(`Ignoring intercepted non-Outline url`);
       }
+
       try {
         this.confirmAddServer(url);
       } catch (err) {
