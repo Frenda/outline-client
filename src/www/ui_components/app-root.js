@@ -44,6 +44,7 @@ import './language-view.js';
 import './licenses-view.js';
 import './outline-icons.js';
 import './privacy-view.js';
+import '../views/contact_view';
 import '../views/servers_view';
 import './server-rename-dialog.js';
 import './user-comms-dialog.js';
@@ -63,7 +64,12 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
     return html`
       <style>
         :host {
-          --app-toolbar-height: 40px;
+          --app-toolbar-height: 2.5rem;
+          --app-toolbar-gutter: .5rem;
+          --app-toolbar-button-gutter: .75rem;
+          --app-header-height: 3.5rem;
+          --contact-view-gutter: calc(var(--app-toolbar-gutter) + var(--app-toolbar-button-gutter));
+          --contact-view-max-width: 400px;
           --light-green: #2fbea5;
           --medium-green: #009688;
           --dark-green: #263238;
@@ -76,13 +82,13 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         }
 
         app-header {
-          height: 56px;
+          height: var(--app-header-height);
         }
 
         app-toolbar {
           height: var(--app-toolbar-height);
           color: #fff;
-          padding: 8px;
+          padding: var(--app-toolbar-gutter);
           background: var(--dark-green);
           text-align: center;
           display: flex;
@@ -91,6 +97,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
 
         app-toolbar [main-title] {
           flex: 2 1 100%;
+          text-transform: capitalize;
         }
 
         app-toolbar img {
@@ -98,9 +105,10 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
           margin-top: 2px;
         }
 
-        app-toolbar paper-button {
+        app-toolbar paper-icon-button {
           /* make the ink color (used for tap animations) actually visible */
           --paper-icon-button-ink-color: #eff;
+          padding: var(--app-toolbar-button-gutter);
         }
 
         #app-toolbar-left,
@@ -125,7 +133,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         }
 
         /* rtl:begin:ignore */
-        #drawer-nav paper-item {
+        #drawer-nav paper-icon-item {
           cursor: pointer;
           font-size: 16px;
           --paper-item-selected: {
@@ -135,8 +143,8 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
           }
         }
 
-        #drawer-nav paper-item:focus::before,
-        #drawer-nav paper-item:focus::after {
+        #drawer-nav paper-icon-item:focus::before,
+        #drawer-nav paper-icon-item:focus::after {
           color: var(--medium-green);
           background-color: var(--light-gray);
         }
@@ -167,20 +175,16 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
           border-width: 0px;
         }
 
-        #drawer-nav paper-item .item-label {
+        #drawer-nav paper-icon-item .item-label {
           float: left;
         }
 
-        #drawer-nav paper-item:not(.iron-selected) {
+        #drawer-nav paper-icon-item:not(.iron-selected) {
           opacity: 0.8;
         }
 
         #drawer-nav paper-item {
           min-height: 32px;
-        }
-
-        .first-menu-item {
-          margin-top: 12px;
         }
 
         .last-menu-item {
@@ -193,23 +197,11 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         }
 
         paper-item > :first-child {
-          cursor: pointer;
-        }
-
-        paper-item > img {
-          height: 24px;
-          width: 24px;
-          margin-right: 10px;
-        }
-
-        paper-item > a {
-          color: inherit;
+          color: rgba(0, 0, 0, 0.54);
+          font-size: 14px;
           text-decoration: none;
-        }
-
-        paper-button {
-          min-width: 0;
-          margin: 0;
+          width: 100%;
+          cursor: pointer;
         }
 
         paper-toast {
@@ -231,7 +223,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
           :host {
             --app-drawer-width: 250px;
           }
-          #drawer-nav paper-item {
+          #drawer-nav paper-icon-item {
             min-height: 42px;
           }
         }
@@ -258,40 +250,50 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         <app-header slot="header" fixed="">
           <app-toolbar>
             <div id="app-toolbar-left">
-              <paper-button
+              <paper-icon-button
                 id="menuBtn"
                 hidden$="[[shouldShowBackButton]]"
+                icon="menu"
                 on-tap="openDrawer"
-              >
-                <img src$="[[rootPath]]assets/icons/menu.png" alt="menu" />
-              </paper-button>
-              <paper-button
+              ></paper-icon-button>
+              <paper-icon-button
                 id="backBtn"
                 hidden$="[[!shouldShowBackButton]]"
+                icon="arrow-back"
                 on-tap="_goBack"
-              >
-                <img src$="[[rootPath]]assets/icons/back.png" alt="back" />
-              </paper-button>
+              ></paper-icon-button>
             </div>
             <div main-title="" class$="[[page]]">
-              <img src$="[[rootPath]]assets/outline-client-logo.png" hidden$="[[!shouldShowAppLogo]]" />
+              <img src$="[[rootPath]]assets/outline-client-logo.svg" hidden$="[[!shouldShowAppLogo]]" />
               <div hidden$="[[shouldShowAppLogo]]">[[localize(pageTitleKey)]]</div>
             </div>
             <div id="app-toolbar-right">
-              <paper-button
+              <paper-icon-button
                 id="addBtn"
+                icon="add"
                 on-tap="promptAddServer"
                 hidden$="[[!shouldShowAddButton]]"
-              >
-                <img src$="[[rootPath]]assets/icons/add.png" alt="add" />
-              </paper-button>
+              ></paper-icon-button>
             </div>
           </app-toolbar>
         </app-header>
 
         <iron-pages id="pages" selected="[[page]]" attr-for-selected="name">
           <servers-view name="servers" id="serversView" servers="[[servers]]" localize="[[localize]]" use-alt-access-message="[[useAltAccessMessage]]""></servers-view>
-          <feedback-view name="feedback" id="feedbackView" localize="[[localize]]"></feedback-view>
+          <template is="dom-if" if="{{contactViewFeatureFlag}}">
+            <contact-view
+              name="contact"
+              id="contactView"
+              localize="[[localize]]"
+              variant="client"
+              error-reporter="[[errorReporter]]"
+              on-success="showContactSuccessToast"
+              on-error="showContactErrorToast"
+            ></contact-view>
+          </template>
+          <template is="dom-if" if="{{!contactViewFeatureFlag}}">
+            <feedback-view name="feedback" id="feedbackView" localize="[[localize]]"></feedback-view>
+          </template>
           <about-view
             name="about"
             id="aboutView"
@@ -359,31 +361,39 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
           </div>
           <hr class="nav-hr" />
           <paper-listbox id="drawer-nav" selected="{{routeData.page}}" attr-for-selected="name" on-tap="closeDrawer">
-            <paper-item name="servers" class="first-menu-item">
-              <img src$="[[rootPath]]assets/icons/outline.png" alt="outline"  />
+            <paper-icon-item name="servers">
+              <iron-icon icon="outline-icons:outline" slot="item-icon"></iron-icon>
               <span class="item-label">[[localize('servers-menu-item')]]</span>
-            </paper-item>
-            <paper-item name="feedback">
-              <img src$="[[rootPath]]assets/icons/feedback.png" alt="feedback"  />
-              [[localize('feedback-page-title')]]
-            </paper-item>
-            <paper-item name="about">
-              <img src$="[[rootPath]]assets/icons/about.png" alt="about"  />
+            </paper-icon-item>
+            <template is="dom-if" if="{{contactViewFeatureFlag}}">
+              <paper-icon-item name="contact">
+                <iron-icon id="feedback-icon" icon="feedback" slot="item-icon"></iron-icon>
+                [[localize('contact-page-title')]]
+              </paper-icon-item>
+            </template>
+            <template is="dom-if" if="{{!contactViewFeatureFlag}}">
+              <paper-icon-item name="feedback">
+                <iron-icon id="feedback-icon" icon="feedback" slot="item-icon"></iron-icon>
+                [[localize('feedback-page-title')]]
+              </paper-icon-item>
+            </template>
+            <paper-icon-item name="about">
+              <iron-icon icon="info" slot="item-icon"></iron-icon>
               [[localize('about-page-title')]]
-            </paper-item>
-            <paper-item name="help">
-              <a href="https://s3.amazonaws.com/outline-vpn/index.html#/support" id="helpAnchor" hidden=""></a>
-              <img src$="[[rootPath]]assets/icons/help.png" alt="help"  />
+            </paper-icon-item>
+            <paper-icon-item name="help">
+              <a href="https://support.getoutline.org" id="helpAnchor" hidden=""></a>
+              <iron-icon icon="help" slot="item-icon"></iron-icon>
               [[localize('help-page-title')]]
-            </paper-item>
-            <paper-item name="language" class$="[[_computeIsLastVisibleMenuItem(shouldShowQuitButton)]]">
-              <img src$="[[rootPath]]assets/icons/change_language.png" alt="change language"  />
+            </paper-icon-item>
+            <paper-icon-item name="language" class$="[[_computeIsLastVisibleMenuItem(shouldShowQuitButton)]]">
+              <iron-icon icon="language" slot="item-icon"></iron-icon>
               [[localize('change-language-page-title')]]
-            </paper-item>
-            <paper-item name="quit" class="last-menu-item" hidden$="[[!shouldShowQuitButton]]">
-              <img src$="[[rootPath]]assets/icons/quit.png" alt="quit" />
+            </paper-icon-item>
+            <paper-icon-item name="quit" class="last-menu-item" hidden$="[[!shouldShowQuitButton]]">
+              <iron-icon icon="cancel" slot="item-icon"></iron-icon>
               [[localize('quit')]]
-            </paper-item>
+            </paper-icon-item>
             <paper-item class="border-top">
               <a href="https://www.google.com/policies/privacy/">[[localize('privacy')]]</a>
             </paper-item>
@@ -528,6 +538,10 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         type: Number,
         readonly: true,
       },
+      errorReporter: {
+        type: Object,
+        readonly: true,
+      },
       page: {
         type: String,
         readonly: true,
@@ -579,6 +593,11 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
         type: Boolean,
         computed: '_computeUseAltAccessMessage(language)',
       },
+      contactViewFeatureFlag: {
+        type: Boolean,
+        readonly: true,
+        value: false,
+      },
     };
   }
 
@@ -600,7 +619,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
     if (!Event.prototype.composedPath) {
       // Polyfill for composedPath. See https://dom.spec.whatwg.org/#dom-event-composedpath.
       // https://developer.mozilla.org/en-US/docs/Web/API/Event/composedPath#browser_compatibility
-      Event.prototype.composedPath = function() {
+      Event.prototype.composedPath = function () {
         if (this.path) {
           return this.path; // ShadowDOM v0 equivalent property.
         }
@@ -667,7 +686,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
     if (this.$.toast.opened) {
       this.$.toast.close();
     }
-    this.async(function() {
+    this.async(function () {
       this.$.toast.text = text;
       this.$.toast.duration = duration || 3000;
 
@@ -681,7 +700,7 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
           button._handler = buttonHandler;
         } else {
           this.toastUrl = buttonUrl;
-          button._handler = function() {
+          button._handler = function () {
             this.$.toastUrl.click();
           }.bind(this);
         }
@@ -698,6 +717,15 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
       return;
     }
     this.set('route.path', '/' + page);
+  }
+
+  showContactSuccessToast() {
+    this.changePage(this.DEFAULT_PAGE);
+    this.showToast(this.localize('feedback-thanks'));
+  }
+
+  showContactErrorToast() {
+    this.showToast(this.localize('error-feedback-submission'));
   }
 
   _callToastHandler() {
@@ -759,6 +787,11 @@ export class AppRoot extends mixinBehaviors([AppLocalizeBehavior], PolymerElemen
   }
 
   _goBack() {
+    if (this.page === 'contact') {
+      // TODO: Replace with `this.$.contactView` once the element is no longer inside a `dom-if`.
+      this.shadowRoot.querySelector('#contactView').reset();
+    }
+
     // If there is a navigation on the webview's history stack, pop it off to go back.
     if (history.length > 1) {
       history.back();

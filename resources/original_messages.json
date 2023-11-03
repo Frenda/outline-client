@@ -37,7 +37,7 @@
   },
   "cancel": {
     "description": "The text on a button to cancel the current operation.",
-    "message": "cancel"
+    "message": "Cancel"
   },
   "change_language_page_title": {
     "description": "The menu item text and title of a page for a user to set the app language.",
@@ -58,6 +58,86 @@
   "connecting_server_state": {
     "description": "A status message on a particular server that indicates the application is currently trying to connect to the labeled server.",
     "message": "Connecting..."
+  },
+  "contact_page_title": {
+    "description": "The menu item text and title of a page for a user to contact the support team.",
+    "message": "Contact us"
+  },
+  "contact_view_exit_cannot_add_server": {
+    "description": "Message shown to users who are trying to contact support about an unsupported issue.",
+    "message": "The Outline team is not able to assist with adding a server. Please try the troubleshooting steps listed $START_OF_LINK$here$END_OF_LINK$ and then contact the person who gave you the access key to troubleshoot this issue.",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "contact_view_exit_connection": {
+    "description": "Message shown to users who are trying to contact support about an unsupported issue.",
+    "message": "The Outline team is not able to assist with connecting to a server. Please try the troubleshooting steps listed $START_OF_LINK$hereEND_OF_LINK and then contact the person who gave you the access key to troubleshoot this issue.",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "contact_view_exit_no_server": {
+    "description": "Message shown to users who are trying to contact support about an unsupported issue.",
+    "message": "The Outline team does not distribute free or paid access keys. $START_OF_LINK$Learn more about how to get an access key.END_OF_LINK",
+    "placeholders": {
+      "END_OF_LINK": {
+        "content": "{closeLink}"
+      },
+      "START_OF_LINK": {
+        "content": "{openLink}"
+      }
+    }
+  },
+  "contact_view_exit_open_ticket": {
+    "description": "Message shown to users who are trying to contact support again while having a pending support ticket open.",
+    "message": "We are currently experiencing high support volume and appreciate your patience. Please do not submit a new request for this concern. If you have additional information to provide, please reply to the initial email about this request."
+  },
+  "contact_view_intro": {
+    "description": "Introduction message to users who are looking to contact support.",
+    "message": "Tell us how we can help. Please explain your issue in detail and do not enter personal information that is not requested below."
+  },
+  "contact_view_issue_cannot_add_server": {
+    "description": "Item in a dropdown menu on our contact page to select the issue the user is trying to contact support about.",
+    "message": "I am having trouble adding a server using my access key"
+  },
+  "contact_view_issue_connection": {
+    "description": "Item in a dropdown menu on our contact page to select the issue the user is trying to contact support about.",
+    "message": "I am having trouble connecting to my Outline VPN server"
+  },
+  "contact_view_issue_general": {
+    "description": "Item in a dropdown menu on our contact page to select the issue the user is trying to contact support about.",
+    "message": "General feedback & suggestions"
+  },
+  "contact_view_issue_managing": {
+    "description": "Item in a dropdown menu on our contact page to select the issue the user is trying to contact support about.",
+    "message": "I need assistance managing my Outline VPN server or helping others connect to it"
+  },
+  "contact_view_issue_no_server": {
+    "description": "Item in a dropdown menu on our contact page to select the issue the user is trying to contact support about.",
+    "message": "I need an access key"
+  },
+  "contact_view_issue_performance": {
+    "description": "Item in a dropdown menu on our contact page to select the issue the user is trying to contact support about.",
+    "message": "My internet access is slow while connected to my Outline VPN server"
+  },
+  "contact_view_issue": {
+    "description": "Label of a Contact Support form input field.",
+    "message": "Outline issue"
+  },
+  "contact_view_open_ticket": {
+    "description": "Label for a Contact Support form asking if the user already has a pending ticket open with support.",
+    "message": "Do you have an open ticket for this issue?"
   },
   "data_collection": {
     "description": "The text for a main menu item that takes the user to a webpage explaining the application's data collection policies.",
@@ -81,15 +161,15 @@
   },
   "error_connection_configuration": {
     "desciption": "An error message shown when the user's server configuration is invalid. The user should contact their service manager to resolve the issue.",
-    "message": "The configuration information for your server is incomplete or invalid. Please contact your service manager to troubleshoot this issue."
+    "message": "Invalid configuration. Screenshot the error details and send them to your access key provider."
   },
   "error_connection_configuration_fetch": {
     "description": "An error message shown when the dynamic access key given proves to be unreachable. The user should contact their service manager to resolve the issue.",
-    "message": "Outline failed to download the configuration information for your server. Please contact your service manager to troubleshoot this issue."
+    "message": "Failed to download the server configuration. Screenshot the error details and send them to your access key provider."
   },
   "error_connection_proxy": {
     "description": "An error message show when Outline fails to establish contact with the obfuscation proxy.",
-    "message": "Outline could not connect to the server. Review the error details to troubleshoot your connection."
+    "message": "Failed to connect. Please check your internet connectivity, then screenshot the error details and send them to your access key provider."
   },
   "error_details": {
     "description": "Button pointing to additional details of an error shown to the user",
@@ -118,7 +198,7 @@
     "message": "Sorry, this access key is not compatible with this version of Outline."
   },
   "error_shadowsocks_unsupported_cipher": {
-    "description": "The server you requested to add uses an unsafe cipher ($CIPHER$). Please contact your server admin.",
+    "description": "The server you requested to add uses an unsafe cipher ($CIPHER$). Please contact the person who gave you this access key.",
     "message": "Shadowsocks Unsupported cipher",
     "placeholders": {
       "CIPHER": {
@@ -215,6 +295,10 @@
     "description": "The menu item text to navigate to the page showing all the software licenses used in building the app.",
     "message": "Licenses"
   },
+  "no": {
+    "description": "Negative answer to a form question.",
+    "message": "No"
+  },
   "non_system_vpn_warning_detail": {
     "description": "Further explanation message that the user needs to verify that their browser is connected through Outline. Outline is the product name and can be found in the translation glossary.",
     "message": "Most browsers connect automatically with Outline, some do not."
@@ -233,7 +317,7 @@
   },
   "outline_plugin_error_invalid_server_credentials": {
     "description": "An error message when the user is trying to connect but has provided an invalid connection key.",
-    "message": "It seems like your access key is not valid. If this happens again, please contact your server admin."
+    "message": "It seems like your access key is not valid. If this happens again, please contact the person who gave it to you."
   },
   "outline_plugin_error_routing_tables": {
     "description": "An error message when the application is not able to configure the system for proxying. A button is shown alongside this message to submit feedback.",
@@ -249,7 +333,7 @@
   },
   "outline_plugin_error_udp_forwarding_not_enabled": {
     "description": "An error message shown when the application tries to connect to a server that does not have the correct UDP forwarding configuration.",
-    "message": "It seems like this server doesn’t support UDP forwarding. If this happens again, please contact your server admin."
+    "message": "It seems like this server doesn’t support UDP forwarding. If this happens again, please contact the person who gave you access."
   },
   "outline_plugin_error_unsupported_routing_table": {
     "description": "An error message when the application fails to connect due to another active VPN.",
@@ -386,7 +470,7 @@
   },
   "server_create_your_own_zero_state": {
     "description": "When the user has not yet added a server to the application, the main page shows this message at the bottom.",
-    "message": "Don’t have a server?$NEW_LINE$Create your own at $START_OF_LINK$our website$END_OF_LINK$.",
+    "message": "Don’t have a server?$NEW_LINE$Create your own with the $START_OF_LINK$Outline Manager$END_OF_LINK$.",
     "placeholders": {
       "END_OF_LINK": {
         "content": "{closeLink}"
@@ -469,6 +553,50 @@
     "description": "Status text showing that a form is progress of being submitted.",
     "message": "Submitting..."
   },
+  "support_form_access_key_source": {
+    "description": "Label of a Contact Support form input field.",
+    "message": "Where did you get your access key?"
+  },
+  "support_form_cloud_provider_aws": {
+    "description": "Item in a dropdown menu to select the cloud provider that the user is contacting support about.",
+    "message": "Amazon Web Services"
+  },
+  "support_form_cloud_provider_digitalocean": {
+    "description": "Item in a dropdown menu to select the cloud provider that the user is contacting support about.",
+    "message": "DigitalOcean"
+  },
+  "support_form_cloud_provider_gcloud": {
+    "description": "Item in a dropdown menu to select the cloud provider that the user is contacting support about.",
+    "message": "Google Cloud"
+  },
+  "support_form_cloud_provider_other": {
+    "description": "Item in a dropdown menu to select an unknown cloud provider that the user is contacting support about.",
+    "message": "Other"
+  },
+  "support_form_cloud_provider": {
+    "description": "Label of a Contact Support form input field.",
+    "message": "Cloud Provider"
+  },
+  "support_form_description": {
+    "description": "Label of a Contact Support form input field.",
+    "message": "Description of the issue"
+  },
+  "support_form_email_invalid": {
+    "description": "Error message shown to a user supplying an invalid email address on the Contact Support form.",
+    "message": "You have entered an invalid format."
+  },
+  "support_form_email": {
+    "description": "Label of a Contact Support form input field.",
+    "message": "Email"
+  },
+  "support_form_required_field": {
+    "description": "Text on a Contact Support form indicating that a field is required.",
+    "message": "Required field"
+  },
+  "support_form_subject": {
+    "description": "Label of a Contact Support form input field.",
+    "message": "Subject"
+  },
   "terms": {
     "description": "The text for a main menu item that takes the user to the applications Terms of Service.",
     "message": "Terms"
@@ -502,5 +630,9 @@
         "example": "1.0.2"
       }
     }
+  },
+  "yes": {
+    "description": "Affirmative answer to a form question.",
+    "message": "Yes"
   }
 }

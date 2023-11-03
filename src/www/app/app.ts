@@ -21,12 +21,13 @@ import {SERVER_CONNECTION_INDICATOR_DURATION_MS} from '../views/servers_view/ser
 
 import {Clipboard} from './clipboard';
 import {EnvironmentVariables} from './environment';
-import {OutlineErrorReporter} from './error_reporter';
+import {OutlineErrorReporter} from '../shared/error_reporter';
 import {OutlineServerRepository} from './outline_server_repository';
 import {Settings, SettingsKey} from './settings';
 import {Updater} from './updater';
 import {UrlInterceptor} from './url_interceptor';
 import {VpnInstaller} from './vpn_installer';
+import {Localizer} from 'src/infrastructure/i18n';
 
 enum OUTLINE_ACCESS_KEY_SCHEME {
   STATIC = 'ss',
@@ -79,7 +80,7 @@ const DEFAULT_SERVER_CONNECTION_STATUS_CHANGE_TIMEOUT = 600;
 
 export class App {
   private feedbackViewEl: polymer.Base;
-  private localize: (...args: string[]) => string;
+  private localize: Localizer;
   private ignoredAccessKeys: {[accessKey: string]: boolean} = {};
   private serverConnectionChangeTimeouts: {[serverId: string]: boolean} = {};
 
@@ -98,13 +99,14 @@ export class App {
     private quitApplication: () => void,
     document = window.document
   ) {
-    this.feedbackViewEl = rootEl.$.feedbackView;
+    this.feedbackViewEl = rootEl.shadowRoot.querySelector('#feedbackView');
     this.localize = this.rootEl.localize.bind(this.rootEl);
 
     this.syncServersToUI();
     this.syncConnectivityStateToServerCards();
     rootEl.appVersion = environmentVars.APP_VERSION;
     rootEl.appBuild = environmentVars.APP_BUILD_NUMBER;
+    rootEl.errorReporter = this.errorReporter;
 
     if (urlInterceptor) {
       this.registerUrlInterceptionListener(urlInterceptor);
@@ -131,7 +133,9 @@ export class App {
     this.rootEl.addEventListener('QuitPressed', this.quitApplication.bind(this));
     this.rootEl.addEventListener('AutoConnectDialogDismissed', this.autoConnectDialogDismissed.bind(this));
     this.rootEl.addEventListener('ShowServerRename', this.rootEl.showServerRename.bind(this.rootEl));
-    this.feedbackViewEl.$.submitButton.addEventListener('tap', this.submitFeedback.bind(this));
+    if (this.feedbackViewEl) {
+      this.feedbackViewEl.$.submitButton.addEventListener('tap', this.submitFeedback.bind(this));
+    }
     this.rootEl.addEventListener('PrivacyTermsAcked', this.ackPrivacyTerms.bind(this));
     this.rootEl.addEventListener('SetLanguageRequested', this.setAppLanguage.bind(this));
 
@@ -150,7 +154,6 @@ export class App {
       this.displayPrivacyView();
     }
     this.displayZeroStateUi();
-    this.pullClipboardText();
   }
 
   showLocalizedError(error?: Error, toastDuration = 10000) {
@@ -296,6 +299,7 @@ export class App {
 
   private requestPromptAddServer() {
     this.rootEl.promptAddServer();
+    this.pullClipboardText();
   }
 
   // Caches an ignored server access key so we don't prompt the user to add it again.
@@ -400,9 +404,6 @@ export class App {
     } catch (e) {
       this.updateServerListItem(serverId, {connectionState: ServerConnectionState.DISCONNECTED});
       console.error(`could not connect to server ${serverId}: ${e.name}`);
-      if (!(e instanceof errors.RegularNativeError)) {
-        this.errorReporter.report(`connection failure: ${e.name}`, 'connection-failure');
-      }
       if (e instanceof errors.SystemConfigurationException) {
         if (await this.showConfirmationDialog(this.localize('outline-services-installation-confirmation'))) {
           await this.installVpnService();
@@ -493,15 +494,15 @@ export class App {
       return;
     }
     const {feedback, category, email} = formData;
-    this.rootEl.$.feedbackView.submitting = true;
+    this.feedbackViewEl.submitting = true;
     try {
       await this.errorReporter.report(feedback, category, email);
-      this.rootEl.$.feedbackView.submitting = false;
-      this.rootEl.$.feedbackView.resetForm();
+      this.feedbackViewEl.submitting = false;
+      this.feedbackViewEl.resetForm();
       this.changeToDefaultPage();
       this.rootEl.showToast(this.rootEl.localize('feedback-thanks'));
     } catch (e) {
-      this.rootEl.$.feedbackView.submitting = false;
+      this.feedbackViewEl.submitting = false;
       this.showLocalizedError(new errors.FeedbackSubmissionError());
     }
   }
@@ -622,17 +623,8 @@ export class App {
   private async syncServerConnectivityState(server: Server) {
     try {
       const isRunning = await server.checkRunning();
-      if (!isRunning) {
-        this.updateServerListItem(server.id, {connectionState: ServerConnectionState.DISCONNECTED});
-        return;
-      }
-      const isReachable = await server.checkReachable();
-      if (isReachable) {
-        this.updateServerListItem(server.id, {connectionState: ServerConnectionState.CONNECTED});
-      } else {
-        console.log(`Server ${server.id} reconnecting`);
-        this.updateServerListItem(server.id, {connectionState: ServerConnectionState.RECONNECTING});
-      }
+      const connectionState = isRunning ? ServerConnectionState.CONNECTED : ServerConnectionState.DISCONNECTED;
+      this.updateServerListItem(server.id, {connectionState});
     } catch (e) {
       console.error('Failed to sync server connectivity state', e);
     }

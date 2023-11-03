@@ -18,12 +18,12 @@ import {EventQueue} from '../model/events';
 
 import {App} from './app';
 import {onceEnvVars} from './environment';
-import {NativeNetworking} from './net';
 import {OutlineServerRepository} from './outline_server_repository';
 import {makeConfig, SIP002_URI} from 'ShadowsocksConfig';
 import {OutlinePlatform} from './platform';
 import {Settings} from './settings';
 import {TunnelFactory} from './tunnel';
+import {Localizer} from 'src/infrastructure/i18n.js';
 
 // Used to determine whether to use Polymer functionality on app initialization failure.
 let webComponentsAreReady = false;
@@ -45,17 +45,16 @@ const oncePolymerIsReady = new Promise<void>(resolve => {
 
 // Do not call until WebComponentsReady has fired!
 function getRootEl() {
-  return (document.querySelector('app-root') as {}) as polymer.Base;
+  return document.querySelector('app-root') as {} as polymer.Base;
 }
 
 function createServerRepo(
   eventQueue: EventQueue,
   storage: Storage,
   deviceSupport: boolean,
-  net: NativeNetworking,
   createTunnel: TunnelFactory
 ) {
-  const repo = new OutlineServerRepository(net, createTunnel, eventQueue, storage);
+  const repo = new OutlineServerRepository(createTunnel, eventQueue, storage);
   if (!deviceSupport) {
     console.debug('Detected development environment, using fake servers.');
     if (repo.getAll().length === 0) {
@@ -107,7 +106,6 @@ export function main(platform: OutlinePlatform) {
         eventQueue,
         window.localStorage,
         platform.hasDeviceSupport(),
-        platform.getNativeNetworking(),
         platform.getTunnelFactory()
       );
       const settings = new Settings();
@@ -146,7 +144,7 @@ function onUnexpectedError(error: Error) {
 }
 
 // Returns Polymer's localization function. Must be called after WebComponentsReady has fired.
-export function getLocalizationFunction() {
+export function getLocalizationFunction(): Localizer {
   const rootEl = getRootEl();
   if (!rootEl) {
     return null;

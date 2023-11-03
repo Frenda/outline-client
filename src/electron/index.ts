@@ -23,7 +23,6 @@ import * as process from 'process';
 import * as url from 'url';
 import autoLaunch = require('auto-launch'); // tslint:disable-line
 
-import * as connectivity from './connectivity';
 import * as errors from '../www/model/errors';
 
 import {ShadowsocksSessionConfig} from '../www/app/tunnel';
@@ -32,6 +31,7 @@ import {GoVpnTunnel} from './go_vpn_tunnel';
 import {installRoutingServices, RoutingDaemon} from './routing_service';
 import {TunnelStore, SerializableTunnel} from './tunnel_store';
 import {VpnTunnel} from './vpn_tunnel';
+import {lookupIp} from './connectivity';
 
 // TODO: can we define these macros in other .d.ts files with default values?
 // Build-time macros injected by webpack's DefinePlugin:
@@ -71,8 +71,6 @@ const TRAY_ICON_IMAGES = {
 const enum Options {
   AUTOSTART = '--autostart',
 }
-
-const REACHABILITY_TIMEOUT_MS = 10000;
 
 let currentTunnel: VpnTunnel | undefined;
 
@@ -452,17 +450,7 @@ function main() {
     mainWindow?.webContents.send('outline-ipc-push-clipboard');
   });
 
-  // TODO: refactor channel name and namespace to a constant
-  ipcMain.handle('outline-ipc-is-server-reachable', async (_, args: {hostname: string; port: number}) => {
-    try {
-      await connectivity.isServerReachable(args.hostname || '', args.port || 0, REACHABILITY_TIMEOUT_MS);
-      return true;
-    } catch {
-      return false;
-    }
-  });
-
-  // Connects to the specified server, if that server is reachable and the credentials are valid.
+  // Connects to the specified server.
   // TODO: refactor channel name and namespace to a constant
   ipcMain.handle(
     'outline-ipc-start-proxying',
@@ -479,11 +467,11 @@ function main() {
       console.log(`connecting to ${args.id}...`);
 
       try {
-        // Rather than repeadedly resolving a hostname in what may be a fingerprint-able way,
-        // resolve it just once, upfront.
-        args.config.host = await connectivity.lookupIp(args.config.host || '');
-
-        await connectivity.isServerReachable(args.config.host || '', args.config.port || 0, REACHABILITY_TIMEOUT_MS);
+        // We must convert the host from a potential "hostname" to an "IP" address
+        // because startVpn will add a routing table entry that prefixed with this
+        // host (e.g. "<host>/32"), therefore <host> must be an IP address.
+        // TODO: make sure we resolve it in the native code
+        args.config.host = await lookupIp(args.config.host || '');
 
         await startVpn(args.config, args.id);
         console.log(`connected to ${args.id}`);

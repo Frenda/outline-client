@@ -26,11 +26,9 @@ import * as Sentry from '@sentry/browser';
 
 import {AbstractClipboard} from './clipboard';
 import {EnvironmentVariables} from './environment';
-import {SentryErrorReporter} from './error_reporter';
-import {FakeNativeNetworking} from './fake_net';
+import {SentryErrorReporter, Tags} from '../shared/error_reporter';
 import {main} from './main';
 import * as errors from '../model/errors';
-import {NativeNetworking} from './net';
 import {OutlinePlatform} from './platform';
 import {Tunnel, TunnelStatus} from './tunnel';
 import {AbstractUpdater} from './updater';
@@ -43,11 +41,6 @@ const OUTLINE_PLUGIN_NAME = 'OutlinePlugin';
 
 // Pushes a clipboard event whenever the app is brought to the foreground.
 class CordovaClipboard extends AbstractClipboard {
-  constructor() {
-    super();
-    document.addEventListener('resume', this.emitEvent.bind(this));
-  }
-
   getContents() {
     return new Promise<string>((resolve, reject) => {
       cordova.plugins.clipboard.paste(resolve, reject);
@@ -72,8 +65,8 @@ async function pluginExecWithErrorCode<T>(cmd: string, ...args: unknown[]): Prom
 
 // Adds reports from the (native) Cordova plugin.
 class CordovaErrorReporter extends SentryErrorReporter {
-  constructor(appVersion: string, appBuildNumber: string, dsn: string) {
-    super(appVersion, dsn, {'build.number': appBuildNumber});
+  constructor(appVersion: string, dsn: string, tags: Tags) {
+    super(appVersion, dsn, tags);
     // Initializes the error reporting framework with the supplied credentials.
     // TODO(fortuna): This is an Promise that is not waited for and can cause a race condition.
     // We should fix it with an async factory function for the Reporter.
@@ -85,12 +78,6 @@ class CordovaErrorReporter extends SentryErrorReporter {
     // Sends previously captured logs and events to the error reporting framework.
     // Associates the report to the provided unique identifier.
     await pluginExec<void>('reportEvents', Sentry.lastEventId() || '');
-  }
-}
-
-class CordovaNativeNetworking implements NativeNetworking {
-  async isServerReachable(hostname: string, port: number) {
-    return await pluginExecWithErrorCode<boolean>('isServerReachable', hostname, port);
   }
 }
 
@@ -131,10 +118,6 @@ class CordovaPlatform implements OutlinePlatform {
     return !CordovaPlatform.isBrowser();
   }
 
-  getNativeNetworking() {
-    return this.hasDeviceSupport() ? new CordovaNativeNetworking() : new FakeNativeNetworking();
-  }
-
   getTunnelFactory() {
     return (id: string) => {
       return this.hasDeviceSupport() ? new CordovaTunnel(id) : new FakeOutlineTunnel(id);
@@ -156,9 +139,10 @@ class CordovaPlatform implements OutlinePlatform {
   }
 
   getErrorReporter(env: EnvironmentVariables) {
+    const sharedTags = {'build.number': env.APP_BUILD_NUMBER};
     return this.hasDeviceSupport()
-      ? new CordovaErrorReporter(env.APP_VERSION, env.APP_BUILD_NUMBER, env.SENTRY_DSN || '')
-      : new SentryErrorReporter(env.APP_VERSION, env.SENTRY_DSN || '', {});
+      ? new CordovaErrorReporter(env.APP_VERSION, env.SENTRY_DSN || '', sharedTags)
+      : new SentryErrorReporter(env.APP_VERSION, env.SENTRY_DSN || '', sharedTags);
   }
 
   getUpdater() {

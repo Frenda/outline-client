@@ -80,9 +80,6 @@
     </config-file>
 
     <source-file src="apple/src/OutlinePlugin.swift" />
-    <source-file src="apple/src/OutlineConnectivity.swift" />
-    <source-file src="apple/src/OutlineSentryLogger.swift" />
-    <source-file src="apple/src/OutlineVpn.swift" />
   </platform>
 
    <!-- macOS -->
@@ -95,9 +92,6 @@
     </config-file>
 
     <source-file src="apple/src/OutlinePlugin.swift" />
-    <source-file src="apple/src/OutlineConnectivity.swift" />
-    <source-file src="apple/src/OutlineSentryLogger.swift" />
-    <source-file src="apple/src/OutlineVpn.swift" />
     <resource-file src="apple/src/macos/Outline-Bridging-Header.h" />
   </platform>
 </plugin>

@@ -16,6 +16,8 @@
 #import "Outline-Swift.h"
 
 @import ServiceManagement;
+@import OutlineNotification;
+@import OutlineTunnel;
 
 @interface AppDelegate()
 @property (strong, nonatomic) NSStatusItem *statusItem;
@@ -54,13 +56,13 @@
               usingBlock:^(NSNotification *_Nonnull n) {
                 self.isSystemShuttingDown = YES;
               }];
-  [NSNotificationCenter.defaultCenter addObserverForName:OutlinePlugin.kVpnConnectedNotification
+  [NSNotificationCenter.defaultCenter addObserverForName:NSNotification.kVpnConnected
                                                   object:nil
                                                    queue:nil
                                               usingBlock:^(NSNotification * _Nonnull note) {
                                                 [self setAppIcon:@"StatusBarButtonImageConnected"];
   }];
-  [NSNotificationCenter.defaultCenter addObserverForName:OutlinePlugin.kVpnDisconnectedNotification
+  [NSNotificationCenter.defaultCenter addObserverForName:NSNotification.kVpnDisconnected
                                                   object:nil
                                                    queue:nil
                                               usingBlock:^(NSNotification * _Nonnull note) {
@@ -110,7 +112,7 @@
   if (!self.isSystemShuttingDown) {
     // Don't post a quit notification if the system is shutting down so the VPN is not stopped
     // and it auto-connects on startup.
-    [[NSNotificationCenter defaultCenter] postNotificationName:OutlinePlugin.kAppQuitNotification
+    [[NSNotificationCenter defaultCenter] postNotificationName:NSNotification.kAppQuit
                                                         object:nil];
   }
 }
