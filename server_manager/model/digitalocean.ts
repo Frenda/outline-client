@@ -17,7 +17,9 @@ import {ManagedServer} from './server';
 
 // A DigitalOcean Region, e.g. "NYC2".
 export class Region implements location.CloudLocation {
-  private static readonly LOCATION_MAP: {readonly [cityId: string]: location.GeoLocation} = {
+  private static readonly LOCATION_MAP: {
+    readonly [cityId: string]: location.GeoLocation;
+  } = {
     ams: location.AMSTERDAM,
     blr: location.BANGALORE,
     fra: location.FRANKFURT,
@@ -28,7 +30,7 @@ export class Region implements location.CloudLocation {
     syd: location.SYDNEY,
     tor: location.TORONTO,
   };
-  constructor(public readonly id: string) {}
+  constructor(readonly id: string) {}
 
   get location(): location.GeoLocation {
     return Region.LOCATION_MAP[this.id.substring(0, 3).toLowerCase()];
@@ -66,5 +68,9 @@ export interface Account {
   listLocations(): Promise<Readonly<RegionOption[]>>;
   // Creates a server and returning it when it becomes active (i.e. the server has
   // created, not necessarily once shadowbox installation has finished).
-  createServer(region: Region, name: string): Promise<ManagedServer>;
+  createServer(
+    region: Region,
+    name: string,
+    metricsEnabled: boolean
+  ): Promise<ManagedServer>;
 }

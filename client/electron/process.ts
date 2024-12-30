@@ -20,8 +20,11 @@ import process from 'node:process';
  * A child process is terminated abnormally, caused by a non-zero exit code.
  */
 export class ProcessTerminatedExitCodeError extends Error {
-  constructor(public readonly exitCode: number) {
-    super(`Process terminated by non-zero exit code: ${exitCode}`);
+  constructor(
+    readonly exitCode: number,
+    errJSON: string
+  ) {
+    super(errJSON);
   }
 }
 
@@ -29,7 +32,7 @@ export class ProcessTerminatedExitCodeError extends Error {
  * A child process is terminated abnormally, caused by a signal string.
  */
 export class ProcessTerminatedSignalError extends Error {
-  constructor(public readonly signal: string) {
+  constructor(readonly signal: string) {
     super(`Process terminated by signal: ${signal}`);
   }
 }
@@ -42,15 +45,15 @@ export class ProcessTerminatedSignalError extends Error {
 //       found).
 export class ChildProcessHelper {
   private readonly processName: string;
-  private childProcess?: ChildProcess = null;
-  private waitProcessToExit?: Promise<void>;
+  private childProcess?: ChildProcess;
+  private waitProcessToExit?: Promise<string>;
 
   /**
    * Whether to enable verbose logging for the process.  Must be called before launch().
    */
-  public isDebugModeEnabled = false;
+  isDebugModeEnabled = false;
 
-  private stdErrListener?: (data?: string | Buffer) => void;
+  private stdOutListener?: ((data?: string | Buffer) => void) | null;
 
   constructor(private readonly path: string) {
     this.processName = basename(this.path);
@@ -60,21 +63,27 @@ export class ChildProcessHelper {
    * Start the process with the given args and wait for the process to exit. If `isDebugModeEnabled`
    * is `true`, the process is started in verbose mode if supported.
    *
-   * If the process does not exist normally (i.e., exit code !== 0 or received a signal), it will
+   * If the process does not exit normally (i.e., exit code !== 0 or received a signal), it will
    * throw either `ProcessTerminatedExitCodeError` or `ProcessTerminatedSignalError`.
+   *
+   * It the process exits normally, it will return the stdout string.
    *
    * @param args The args for the process
    */
-  async launch(args: string[]): Promise<void> {
+  async launch(args: string[], returnStdOut: boolean = true): Promise<string> {
     if (this.childProcess) {
-      throw new Error(`subprocess ${this.processName} has already been launched`);
+      throw new Error(
+        `subprocess ${this.processName} has already been launched`
+      );
     }
     this.childProcess = spawn(this.path, args);
-    return (this.waitProcessToExit = new Promise((resolve, reject) => {
+    return (this.waitProcessToExit = new Promise<string>((resolve, reject) => {
+      let stdErrJSON = '';
+      let stdOutStr = '';
       const onExit = (code?: number, signal?: string) => {
         if (this.childProcess) {
           this.childProcess.removeAllListeners();
-          this.childProcess = null;
+          this.childProcess = undefined;
         } else {
           // When listening to both the 'exit' and 'error' events, guard against accidentally
           // invoking handler functions multiple times.
@@ -83,35 +92,39 @@ export class ChildProcessHelper {
 
         logExit(this.processName, code, signal);
         if (code === 0) {
-          resolve();
+          resolve(stdOutStr);
         } else if (code) {
-          reject(new ProcessTerminatedExitCodeError(code));
+          reject(new ProcessTerminatedExitCodeError(code, stdErrJSON));
         } else {
-          reject(new ProcessTerminatedSignalError(signal));
+          reject(new ProcessTerminatedSignalError(signal ?? 'unknown'));
         }
       };
 
-      const onStdErr = (data?: string | Buffer) => {
+      this.childProcess?.stdout?.on('data', data => {
+        this.stdOutListener?.(data);
+        if (returnStdOut) {
+          stdOutStr += data?.toString() ?? '';
+        }
+      });
+      this.childProcess?.stderr?.on('data', (data?: string | Buffer) => {
         if (this.isDebugModeEnabled) {
-          console.error(`[STDERR - ${this.processName}]: ${data}`);
+          // This will be captured by Sentry
+          console.error(`[${this.processName} - STDERR]: ${data}`);
         }
-        if (this.stdErrListener) {
-          this.stdErrListener(data);
-        }
-      };
-      this.childProcess.stderr.on('data', onStdErr.bind(this));
+        stdErrJSON += data?.toString() ?? '';
+      });
 
       if (this.isDebugModeEnabled) {
         // Redirect subprocess output while bypassing the Node console.  This makes sure we don't
         // send web traffic information to Sentry.
-        this.childProcess.stdout.pipe(process.stdout);
-        this.childProcess.stderr.pipe(process.stderr);
+        this.childProcess?.stdout?.pipe(process.stdout);
+        this.childProcess?.stderr?.pipe(process.stderr);
       }
 
       // We have to listen for both events: error means the process could not be launched and in that
       // case exit will not be invoked.
-      this.childProcess.on('error', onExit.bind(this));
-      this.childProcess.on('exit', onExit.bind(this));
+      this.childProcess?.on('error', onExit.bind(this));
+      this.childProcess?.on('exit', onExit.bind(this));
     }));
   }
 
@@ -121,25 +134,25 @@ export class ChildProcessHelper {
    * If the process does not exist normally (i.e., exit code !== 0 or received a signal), it will
    * throw either `ProcessTerminatedExitCodeError` or `ProcessTerminatedSignalError`.
    */
-  stop(): Promise<void> {
+  async stop(): Promise<string> {
     if (!this.childProcess) {
       // Never started.
-      return;
+      return '';
     }
     this.childProcess.kill();
-    return this.waitProcessToExit;
+    return (await this.waitProcessToExit) ?? '';
   }
 
-  set onStdErr(listener: ((data?: string | Buffer) => void) | undefined) {
-    this.stdErrListener = listener;
-    if (!this.stdErrListener && !this.isDebugModeEnabled) {
-      this.childProcess?.stderr.removeAllListeners();
+  set onStdOut(listener: ((data?: string | Buffer) => void) | null) {
+    this.stdOutListener = listener;
+    if (!this.stdOutListener && !this.isDebugModeEnabled) {
+      this.childProcess?.stdout?.removeAllListeners();
     }
   }
 }
 
 function logExit(processName: string, exitCode?: number, signal?: string) {
-  const prefix = `[EXIT - ${processName}]: `;
+  const prefix = `[${processName} - EXIT]: `;
   if (exitCode !== null) {
     const log = exitCode === 0 ? console.log : console.error;
     log(`${prefix}Exited with code ${exitCode}`);

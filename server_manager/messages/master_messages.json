@@ -845,6 +845,18 @@
       }
     }
   },
+  "metrics_setup_description": {
+    "message": "Share anonymized metrics to help improve the reliability and performance of Outline, for you and those you share a server with. You can update these preferences any time in the server settings tab.",
+    "description": "This string appears as a paragraph in a dialog that prompts the user to share server metrics. It provides information about the purpose of metrics sharing."
+  },
+  "metrics_setup_learn_more": {
+    "message": "Learn more",
+    "description": "This string appears as a link in a dialog that prompts the user to share server metrics. Clicking it opens a browser tab with more information about metrics sharing."
+  },
+  "metrics_setup_title": {
+    "message": "Share anonymous metrics for this server",
+    "description": "This string appears as the header of a dialog that prompts the user to share server metrics."
+  },
   "metrics_share": {
     "message": "Share metrics",
     "description": "This string appears as a button of a dialog that prompts the user to share server metrics. Clicking it enables server metrics reporting."
@@ -1083,6 +1095,10 @@
     "message": "Keys",
     "description": "This string appears within the server view as the unit of a card that displays the number of server access keys."
   },
+  "server_metrics": {
+    "message": "Metrics",
+    "description": "This string appears within the server view as a header of the section that displays server metrics."
+  },
   "server_my_access_key": {
     "message": "My access key",
     "description": "This string appears within the server view as the header for the default server access key. This key is meant to be used by the server administrator."
@@ -1317,7 +1333,7 @@
     }
   },
   "share_invite_html": {
-    "message": "Use this server to safely access the open internet:$LINE_BREAK$$LINE_BREAK$1) Download and install the Outline app for your device:$LINE_BREAK$$LINE_BREAK$  - iOS: https://itunes.apple.com/app/outline-app/id1356177741$LINE_BREAK$  - MacOS: https://itunes.apple.com/app/outline-app/id1356178125$LINE_BREAK$  - Windows: https://s3.amazonaws.com/outline-releases/client/windows/stable/Outline-Client.exe$LINE_BREAK$  - Linux: https://s3.amazonaws.com/outline-releases/client/linux/stable/Outline-Client.AppImage$LINE_BREAK$  - Android: https://play.google.com/store/apps/details?id=org.outline.android.client$LINE_BREAK$   - Android alternative link: https://s3.amazonaws.com/outline-releases/client/android/stable/Outline-Client.apk$LINE_BREAK$$LINE_BREAK$2) You will receive an access key that starts with ss://. Once your receive it, copy this access key.$LINE_BREAK$$LINE_BREAK$3) Open the Outline client app. If your access key is auto-detected, tap \"Connect\" and proceed. If your access key is not auto-detected, then paste it in the field, then tap \"Connect\" and proceed.$LINE_BREAK$$LINE_BREAK$You're ready to use the open internet! To make sure you successfully connected to the server, try searching for \"what is my ip\" on Google Search. The IP address shown in Google should match the IP address in the Outline client.$LINE_BREAK$$LINE_BREAK$Learn more about Outline here: https://getoutline.org/",
+    "message": "Use this server to safely access the open internet:$LINE_BREAK$$LINE_BREAK$1) Download and install the Outline app for your device:$LINE_BREAK$$LINE_BREAK$  - iOS: https://itunes.apple.com/app/outline-app/id1356177741$LINE_BREAK$  - MacOS: https://itunes.apple.com/app/outline-app/id1356178125$LINE_BREAK$  - Windows: https://s3.amazonaws.com/outline-releases/client/windows/stable/Outline-Client.exe$LINE_BREAK$  - Linux: https://s3.amazonaws.com/outline-releases/client/linux/stable/Outline-Client.AppImage$LINE_BREAK$  - Android: https://play.google.com/store/apps/details?id=org.outline.android.client$LINE_BREAK$   - Android alternative link: https://s3.amazonaws.com/outline-releases/client/android/stable/Outline-Client.apk$LINE_BREAK$$LINE_BREAK$2) You will receive an access key that starts with ss://. Once you receive it, copy this access key.$LINE_BREAK$$LINE_BREAK$3) Open the Outline client app. If your access key is auto-detected, tap \"Connect\" and proceed. If your access key is not auto-detected, then paste it in the field, then tap \"Connect\" and proceed.$LINE_BREAK$$LINE_BREAK$You're ready to use the open internet! To make sure you successfully connected to the server, try searching for \"what is my ip\" on Google Search. The IP address shown in Google should match the IP address in the Outline client.$LINE_BREAK$$LINE_BREAK$Learn more about Outline here: https://getoutline.org/",
     "description": "This string appears as an email invitation instructing new Outline users how to set up and connect to Outline.",
     "placeholders": {
       "LINE_BREAK": {
@@ -1380,6 +1396,10 @@
   "support_form_email": {
     "description": "Label of a Contact Support form input field.",
     "message": "Email"
+  },
+  "support_form_outreach_consent": {
+    "description": "Label for a consent checkbox that opts users in to being contacted in the future.",
+    "message": "Yes, I'd like to sign up to be contacted about collaboration opportunities."
   },
   "support_form_required_field": {
     "description": "Text on a Contact Support form indicating that a field is required.",
